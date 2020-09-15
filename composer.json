@@ -1,0 +1,28 @@
+{
+    "name": "guicalabria/boletophp",
+    "type": "library",
+    "version": "0.1",
+    "description": "API para criação e comunicação com os webservices de bancos para geração de boleto bancário.",
+    "keywords": ["boleto", "duplicata", "banco"],
+    "homepage": "https://github.com/guicalabria/boletophp",
+    "license": ["MIT"],
+    "authors": [
+        {
+            "name": "Guilherme Calabria Filho",
+            "email": "guiga86@mgmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php" : ">= 7.0",
+        "guicalabria/openboleto": "dev-master"
+    },
+   	"autoload": {
+   		"classmap": ["src/"]
+   	},
+    "extra": {
+        "branch-alias": {
+            "dev-master": "dev-master"
+        }
+    }
+}
