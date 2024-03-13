@@ -2,7 +2,7 @@
 namespace Plotag\Enter8;
 
 /**
- *  Class responsible for creating and communicating with web services for boletos in Brazil
+ *  Class responsible for creating and communicating with web services for boletos in Brazil 
  *
  * @category  library
  * @package   BoletoWebService
@@ -13,42 +13,43 @@ namespace Plotag\Enter8;
 
 
 class BoletoPHP {
+ 
+    private $bancoDisponivel  = array('bancodobrasil','santander');
+    
+    private $banco;
+    private $bancoWebService;
+    /**
+     * Mapa das classes dos Bancos e seus códigos
+     *
+     * @var array
+     */
+    protected static $classMap = array(
+        '001' => 'BancodoBrasil',
+        '033' => 'Santander',
+    );
 
-   private $bancoDisponivel  = array('bancodobrasil');
+    /*Configuração dos dados do boleto*/
+    private $configuracaoBoleto;
 
-   private $banco;
-   private $bancoWebService;
-   /**
-    * Mapa das classes dos Bancos e seus códigos
-    *
-    * @var array
-    */
-   protected static $classMap = array(
-      '001' => 'BancodoBrasil'
-   );
-
-   /*Configuração dos dados do boleto*/
-   private $configuracaoBoleto;
-
-   public $erro = false;
-   public $mensagem = '';
-
+    public $erro = false;
+    public $mensagem = '';
+    
    /**
      * Constructor
      * @param string $codigobanco
      */
    public function __construct($codigobanco)
    {
-      if (! isset(static::$classMap[$codigobanco]) )
+      if (! isset(static::$classMap[$codigobanco]) ) 
       {
-         $this->erro = true;
-         $this->mensagem .= '<span class="formok">Banco não disponível para uso da classe</span>';
-         return false;
+          $this->erro = true;
+          $this->mensagem .= '<span class="formok">Banco não disponível para uso da classe</span>';
+          return false;
       }
-
+      
       $this->banco = $codigobanco;
    }
-
+   
    /**
     * Cria a instância do determinado banco
     *
@@ -57,7 +58,7 @@ class BoletoPHP {
     */
    public function loadBank(array $params = array())
    {
-      if (! isset(static::$classMap[$this->banco]) )
+      if (! isset(static::$classMap[$this->banco]) ) 
       {
          $this->erro = true;
          $this->mensagem .= '<span class="formok">Banco não disponível para uso da classe</span>';
@@ -66,7 +67,7 @@ class BoletoPHP {
       $class = __NAMESPACE__ . '\\' .static::$classMap[$this->banco].'Web';
 
       $this->bancoWebService = new $class($params);
-
+      
       return true;
    }
    /**
@@ -78,7 +79,7 @@ class BoletoPHP {
    public function loadSetup(array $params = array())
    {
       $this->loadBank($params);
-
+      
       if ( $this->erro )
       {
          $this->mensagem .= '<span class="formok">Erro ao carregar configuração</span>';
@@ -94,7 +95,7 @@ class BoletoPHP {
       }
       return true;
    }
-
+   
    /**
     * Define a configuração do boleto
     *
@@ -106,7 +107,7 @@ class BoletoPHP {
       $this->configuracaoBoleto = $configuracao;
       return true;
    }
-
+   
    /**
     * Cria o registro do boleto
     *
@@ -117,13 +118,14 @@ class BoletoPHP {
    {
       $parametros = array('codigoModalidadeTitulo'=>1,'indicadorPermissaoRecebimentoParcial'=>'N','codigoTipoCanalSolicitacao'=>5,
         'textoDescricaoTipoTitulo'=>'Recibo','codigoChaveUsuario'=>1,'resultado'=>array());
-
+        
       if ( $registro['especietitulo']=='dm' ) $parametros['codigoTipoTitulo'] = 2;
       elseif ( $registro['especietitulo']=='ds' ) $parametros['codigoTipoTitulo'] = 4;
       else $parametros['codigoTipoTitulo'] = 17;
-
-      $coluna = array('numeroConvenio'=>'conveniolider','numeroCarteira'=>'carteira','numeroVariacaoCarteira'=>'variacaodacarteira','codigoAceiteTitulo'=>'aceite');
-
+         
+      $coluna = array('numeroConvenio'=>'conveniolider','numeroCarteira'=>'carteira','numeroVariacaoCarteira'=>'variacaodacarteira',
+        'codigoAceiteTitulo'=>'aceite');
+        
       foreach($coluna as $key=>$item)
       {
          if ( !isset($this->configuracaoBoleto[$item]) || $this->configuracaoBoleto[$item]=='' )
@@ -136,7 +138,7 @@ class BoletoPHP {
       }
 
       $coluna = array('dataEmissaoTitulo'=>'dataregistro','dataVencimentoTitulo'=>'vencimento','valorOriginalTitulo'=>'valor','numeroInscricaoPagador'=>'cnpj','nomePagador'=>'razaosocial','textoEnderecoPagador'=>'endereco','numeroCepPagador'=>'cep',
-         'nomeMunicipioPagador'=>'cidade','nomeBairroPagador'=>'bairro','siglaUfPagador'=>'estado','textoNumeroTelefonePagador'=>'telefone');
+        'nomeMunicipioPagador'=>'cidade','nomeBairroPagador'=>'bairro','siglaUfPagador'=>'estado','textoNumeroTelefonePagador'=>'telefone');
       $tamanhoCampo = array('nomePagador'=>60,'nomeMunicipioPagador'=>20,'nomeBairroPagador'=>20,'textoEnderecoPagador'=>60,'textoNumeroTelefonePaga'=>10);
       foreach($coluna as $key=>$item)
       {
@@ -149,23 +151,23 @@ class BoletoPHP {
          $parametros[$key] = utf8_encode(Texto::retiraAcento($registro[$item]));
          if ( isset($tamanhoCampo[$key]) ) $parametros[$key] = substr($parametros[$key],0,$tamanhoCampo[$key]);
       }
-
+      
       $parametros['textoMensagemBloquetoOcorrencia'] = (isset($registro['mensagem'])?utf8_encode($registro['mensagem']):'');
-
+      
       /*Nosso número*/
       $parametros['textoNumeroTituloCliente'] = '000'.$parametros['numeroConvenio'];
-      if ( $parametros['numeroCarteira']=='17' )
+      if ( $parametros['numeroCarteira']=='17' ) 
       {
          /*FORMATO NOSSO NÚMERO PARA CONVÊNIOS ACIMA DE 1.000.000 (UM MILHÃO): A composição do nosso número deve obedecer as seguintes regras:
-            CCCCCCCNNNNNNNNNN convênios com numeração acima de 1.000.000, onde:
-            "C" - é o número do convênio fornecido pelo Banco (número fixo e não pode ser
-            alterado)
-            "N" - é um sequencial atribuído pelo cliente*/
+           CCCCCCCNNNNNNNNNN convênios com numeração acima de 1.000.000, onde:
+           "C" - é o número do convênio fornecido pelo Banco (número fixo e não pode ser
+           alterado)
+           "N" - é um sequencial atribuído pelo cliente*/
          /*Utilizar a duplicata como nosso número, como a duplicata pode ter texto usar:
-            O primeiro algarimos para diferenciar as notas
-            O segundo se é parcela (0 não é), diferente até o quarto o número da parcela*/
+           O primeiro algarimos para diferenciar as notas
+           O segundo se é parcela (0 não é), diferente até o quarto o número da parcela*/
          /*hifén - parcela, barra - união, Ped - pedido*/
-
+         
          $nossonumero = '';
          /*Tipo de duplicata. 0-União,1-Pedido,2-mercantil,3-serviço,4-Crédito*/
          if ( strpos($registro['duplicata'],'/')===false ) $nossonumero .= '0';
@@ -174,7 +176,7 @@ class BoletoPHP {
          elseif ( $registro['especietitulo']=='dm' ) $nossonumero .= '2';
          elseif ( $registro['especietitulo']=='ds' ) $nossonumero .= '3';
          else throw new \Exception('Tipo de duplicata não encontrada, operação cancelada');
-
+         
          if ( strpos($registro['duplicata'],'/')===false )
          {
             if ( strpos($registro['duplicata'],'-')===false )
@@ -197,7 +199,6 @@ class BoletoPHP {
             else
             {
                $aux2 = explode('-',$aux[0]);
-               $nossonumero .= str_pad(Texto::somenteNumero($aux2[1]),2,'0',STR_PAD_LEFT);
                $nossonumero .= str_pad(Texto::somenteNumero($aux2[0]),7,'0',STR_PAD_LEFT);
             }
          }
@@ -212,10 +213,10 @@ class BoletoPHP {
       $parametros['textoNumeroTituloBeneficiario'] = $registro['duplicata'];
       /*1 = CPF-PAGADOR 2 = CNPJ-PAGADOR*/
       $parametros['codigoTipoInscricaoPagador'] = (strlen($parametros['numeroInscricaoPagador'])==11 ? 1:2);
-
+      
       /*Dados para boleto bancários registrado*/
       $dadosRegistro = array('sid'=>$registro['sid'],'banco' => $this->banco,'dataemissao'=>$registro['dataregistro'],'duplicata'=>$registro['duplicata'],'vencimento'=>$registro['vencimento'],'nossonumero'=>$nossonumero,'digitonossonumero'=>'','especietitulo'=>$registro['especietitulo'],'tipodecobranca'=>1,'valorlancamento'=>$registro['valor'],'carteira'=>$parametros['numeroCarteira']);
-
+      
       /*codigoTipoDesconto 0 = SEM-DESCONTO 1 = DESCONTO-VALOR 2 = DESCONTO-PERCENTUAL 3 = POR-DIA-ANTECIPACAO*/
       $parametros['dataDescontoTitulo'] = false;
       $parametros['valorDescontoTitulo'] = false;
@@ -234,7 +235,7 @@ class BoletoPHP {
          $dadosRegistro['descontoconcedido'] = $registro['duplicata']*$parametros['percentualDescontoTitulo']/100;
       }
       else $parametros['codigoTipoDesconto'] = 0;
-
+      
       $parametros['dataMultaTitulo'] = false;
       $parametros['percentualMultaTitulo'] = false;
       $parametros['valorMultaTitulo'] = false;
@@ -242,7 +243,7 @@ class BoletoPHP {
       if ( isset($this->configuracaoBoleto['multafixo']) && $this->configuracaoBoleto['multafixo']!='' )
       {
          $parametros['codigoTipoMulta'] = 1;
-         $parametros['valorMultaTitulo'] = str_replace(',','.',$this->configuracaoBoleto['multafixo']);
+         $parametros['valorMultaTitulo'] = $this->configuracaoBoleto['multafixo'];
          if ( !isset($registro['datamulta']) )
          {
             $this->erro = true;
@@ -264,18 +265,18 @@ class BoletoPHP {
          $parametros['dataMultaTitulo'] = $registro['datamulta'];
       }
       else $parametros['codigoTipoMulta'] = 0;
-
+            
       if ( isset($this->configuracaoBoleto['abatimento']) && $this->configuracaoBoleto['abatimento']!='' )
       {
          $parametros['valorAbatimentoTitulo'] = $this->configuracaoBoleto['abatimento'];
          $dadosRegistro['abatimento'] = $parametros['valorAbatimentoTitulo'];
       }
       else  $parametros['valorAbatimentoTitulo'] = false;
-
+      
       if ( isset($this->configuracaoBoleto['protestodiasuteis']) && $this->configuracaoBoleto['protestodiasuteis']!='' ) $parametros['quantidadeDiaProtesto'] = $this->configuracaoBoleto['protestodiasuteis'];
       elseif ( isset($this->configuracaoBoleto['protestodiascorridos']) && $this->configuracaoBoleto['protestodiascorridos']!='' ) $parametros['quantidadeDiaProtesto'] = $this->configuracaoBoleto['protestodiascorridos'];
       else  $parametros['quantidadeDiaProtesto'] = false;
-
+      
       $parametros['percentualJuroMoraTitulo'] = false;
       $parametros['valorJuroMoraTitulo'] = false;
       /*codigoTipoJuroMora 0 = Nao informado 1 = Valor Por Dia De Atraso 2 = Taxa Mensal 3 = Isento*/
@@ -292,10 +293,10 @@ class BoletoPHP {
          $dadosRegistro['jurospercentual'] = str_replace(',','.',$parametros['percentualJuroMoraTitulo']);
       }
       else $parametros['codigoTipoJuroMora'] = 0;
-
+      
       /*Corrigindo a ordem dos campos*/
       $colunas = array('numeroConvenio','numeroCarteira','numeroVariacaoCarteira','codigoModalidadeTitulo','dataEmissaoTitulo','dataVencimentoTitulo','valorOriginalTitulo','codigoTipoDesconto','dataDescontoTitulo','percentualDescontoTitulo','valorDescontoTitulo','valorAbatimentoTitulo','quantidadeDiaProtesto','codigoTipoJuroMora','valorJuroMoraTitulo','percentualJuroMoraTitulo','codigoTipoMulta','dataMultaTitulo','percentualMultaTitulo','valorMultaTitulo','codigoAceiteTitulo','codigoTipoTitulo','textoDescricaoTipoTitulo','indicadorPermissaoRecebimentoParcial','textoNumeroTituloBeneficiario','textoNumeroTituloCliente','textoMensagemBloquetoOcorrencia','codigoTipoInscricaoPagador','numeroInscricaoPagador','nomePagador','textoEnderecoPagador','numeroCepPagador','nomeMunicipioPagador','nomeBairroPagador','siglaUfPagador','textoNumeroTelefonePagador','codigoChaveUsuario','codigoTipoCanalSolicitacao');
-      $novosParametros = array();
+      $novosParametros = array(); 
       foreach($colunas as $nome)
       {
          if ( !isset($parametros[$nome]) )
@@ -305,19 +306,19 @@ class BoletoPHP {
             return false;
          }
          if ( $parametros[$nome]===false ) continue;
-
+         
          $novosParametros[$nome] = trim($parametros[$nome]);
       }
       //$this->bancoWebService->alterarParaAmbienteDeTestes();
       // $bb->alterarParaAmbienteDeProducao();
-
+      
       // Exemplo de chamada passando os parâmetros com a token.
       // Retorna um array com a resposta do Banco do Brasil, se ocorreu tudo bem. Caso contrário, retorna "false".
       // A descrição do erro pode ser obtida pelo método "obterErro()".
-
+      
       $resultado = $this->bancoWebService->registrarBoleto($novosParametros);
       if ( $this->bancoWebService->erro ){ $this->erro = true;$this->mensagem .= '<span class="formok">Erro ao registrar boleto</span>'.utf8_decode($this->bancoWebService->mensagem);return false; }
-
+      
       $dadosRegistro['agenciarecebedora'] = $resultado['codigoPrefixoDependenciaBeneficiario'];
       $dadosRegistro['contarecebedora'] = $resultado['numeroContaCorrenteBeneficiario'];
       $dadosRegistro['linhadigitavel'] = $resultado['linhaDigitavel'];

@@ -1,7 +1,7 @@
 {
     "name": "guicalabria/boletophp",
     "type": "library",
-    "version": "0.1",
+    "version": "1.0",
     "description": "API para criação e comunicação com os webservices de bancos para geração de boleto bancário.",
     "keywords": ["boleto", "duplicata", "banco"],
     "homepage": "https://github.com/guicalabria/boletophp",
@@ -15,7 +15,8 @@
     ],
     "require": {
         "php" : ">= 7.0",
-        "guicalabria/openboleto": "dev-master"
+        "guicalabria/openboleto": "1.0",
+        "guicalabria/ws-boleto-santander": "1.0"
     },
    	"autoload": {
    		"classmap": ["src/"]
